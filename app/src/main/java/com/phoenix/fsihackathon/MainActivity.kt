@@ -2,6 +2,7 @@ package com.phoenix.fsihackathon
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
@@ -76,18 +77,17 @@ class MainActivity : AppCompatActivity() {
                     if (editText.toInt() == currentUser!!.rCode) {
                         receivingUser = currentUser as User
                         tv_question.text = allQuestions[3]
-                    } else {
+                    } else if (editText.toInt() != currentUser!!.rCode) {
                         for (user in allUserData) {
                             if (editText.toInt() == user.rCode) {
                                 receivingUser = user
-                                break
-                            } else {
-                                showToast(invalidCodeErrorMessage)
-                                clearText()
-                                return@setOnClickListener
+                                tv_question.text = allQuestions[3]
                             }
                         }
-                        tv_question.text = allQuestions[3]
+                    } else {
+                        showToast(invalidCodeErrorMessage)
+                        clearText()
+                        return@setOnClickListener
                     }
                     clearText()
                 }
@@ -169,17 +169,22 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 allQuestions[8] -> {
-                    recipientBankIndex = editText.toInt()
-                    tv_question.text =
-                        currentUser!!.bankDetails.bankBalance[recipientBankIndex - 1].toString()
-                    val message = "1. Perform another transaction\n2. Exit"
-                    tv_user_details.text = message
-                    if (editText.toInt() == 1) {
-                        // Perform another transaction
-                        tv_question.text = allQuestions[0]
-                    } else if (editText.toInt() == 2) {
-                        // Exit app
-                        exitProcess(0)
+                    if (editText.toInt() > recipientBankIndex) {
+                        showToast(invalidInput)
+                        return@setOnClickListener
+                    } else {
+                        recipientBankIndex = editText.toInt()
+                        tv_question.text =
+                            currentUser!!.bankDetails.bankBalance[recipientBankIndex - 1].toString()
+                        val message = "1. Perform another transaction\n2. Exit"
+                        tv_user_details.text = message
+                        if (editText.toInt() == 1) {
+                            // Perform another transaction
+                            tv_question.text = allQuestions[0]
+                        } else if (editText.toInt() == 2) {
+                            // Exit app
+                            exitProcess(0)
+                        }
                     }
                 }
             }
