@@ -73,6 +73,7 @@ class MainActivity : AppCompatActivity() {
                 allQuestions[2] -> {
                     // Inter-bank transfer to yourself
                     if (editText.toInt() == currentUser!!.rCode) {
+                        receivingUser = currentUser as User
                         tv_question.text = allQuestions[3]
                     } else {
                         for (user in allUserData) {
