@@ -9,6 +9,12 @@ import com.phoenix.fsihackathon.data.QuestionDataSource.getQuestions
 import com.phoenix.fsihackathon.data.User
 import com.phoenix.fsihackathon.data.UserDataSource.getData
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,8 +40,10 @@ class MainActivity : AppCompatActivity() {
         tv_question.text = allQuestions[0]
         hideText()
         floatingActionButton.setOnClickListener {
+            if (editText.text.isNullOrEmpty()) {
+                return@setOnClickListener
+            }
             hideText()
-            Log.d("MainActivity", "Current User details: ${getCurrentUser(editText.toInt())}")
             when (tv_question.text) {
                 allQuestions[0] -> {
                     currentUser = getCurrentUser(editText.toInt())
@@ -102,6 +110,9 @@ class MainActivity : AppCompatActivity() {
                         currentUserBankIndex = editText.toInt()
                         tv_question.text = allQuestions[5]
                         clearText()
+                        CoroutineScope(IO).launch {
+                            threeSecondsDelay()
+                        }
                     }
                 }
                 allQuestions[5] -> {
@@ -136,6 +147,7 @@ class MainActivity : AppCompatActivity() {
                     //tv_question.text = allQuestions[8]
                 }
                 allQuestions[8] -> {
+
                     recipientBankIndex = editText.toInt()
                     tv_question.text =
                         currentUser!!.bankDetails.bankBalance[recipientBankIndex - 1].toString()
@@ -170,5 +182,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun clearText() {
         editText.setText("")
+    }
+
+    private suspend fun threeSecondsDelay() {
+        kotlinx.coroutines.delay(1000)
     }
 }
