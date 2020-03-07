@@ -2,19 +2,14 @@ package com.phoenix.fsihackathon
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.EditText
+import android.widget.Toast
 import com.phoenix.fsihackathon.data.QuestionDataSource.getQuestions
 import com.phoenix.fsihackathon.data.User
 import com.phoenix.fsihackathon.data.UserDataSource.getData
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlin.coroutines.coroutineContext
+import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,14 +23,16 @@ class MainActivity : AppCompatActivity() {
         val cancelTransactionErrorMessage = "You cancelled the transaction"
         val insufficientFundErrorMessage = "Insufficient funds. Select another account"
         val invalidInput = "You entered an invalid input"
-        val invalidOTPErrorMessage = "Invalid OTP. Restart transaction"
+        val invalidTransferAmount = "Minimum transfer amount is N50"
+        val invalidTransferAmount2 = "Maximum transfer amount is N150,000"
+        val invalidOTPErrorMessage = "Invalid OTP."
 
         var currentUser: User? = User()
         var receivingUser: User = User()
         var currentUserBankIndex = 0
         var recipientBankIndex = 0
         var transferAmount: Double = 0.0
-        var OTP = 123456
+        val OTP = 123456
 
         tv_question.text = allQuestions[0]
         hideText()
@@ -51,7 +48,8 @@ class MainActivity : AppCompatActivity() {
                         tv_question.text = allQuestions[1]
                         clearText()
                     } else {
-                        tv_question.text = invalidCodeErrorMessage
+                        showToast(invalidCodeErrorMessage)
+                        //tv_question.text = invalidCodeErrorMessage
                         clearText()
                     }
                 }
@@ -68,6 +66,9 @@ class MainActivity : AppCompatActivity() {
                         showText()
                         tv_user_details.text = formattedBanks
                         clearText()
+                    } else {
+                        showToast(invalidInput)
+                        clearText()
                     }
                 }
                 allQuestions[2] -> {
@@ -80,6 +81,10 @@ class MainActivity : AppCompatActivity() {
                             if (editText.toInt() == user.rCode) {
                                 receivingUser = user
                                 break
+                            } else {
+                                showToast(invalidCodeErrorMessage)
+                                clearText()
+                                return@setOnClickListener
                             }
                         }
                         tv_question.text = allQuestions[3]
@@ -88,14 +93,22 @@ class MainActivity : AppCompatActivity() {
                 }
                 allQuestions[3] -> {
                     transferAmount = editText.toInt().toDouble()
-                    tv_question.text = allQuestions[4]
-                    val formattedBanks: StringBuilder = java.lang.StringBuilder()
-                    for ((index, banks) in currentUser!!.bankDetails.bankName.withIndex()) {
-                        formattedBanks.append("${index + 1}. $banks\n")
+                    if (transferAmount < 50.0) {
+                        showToast(invalidTransferAmount)
+                        return@setOnClickListener
+                    } else if (transferAmount <= 150000.0) {
+                        tv_question.text = allQuestions[4]
+                        val formattedBanks: StringBuilder = java.lang.StringBuilder()
+                        for ((index, banks) in currentUser!!.bankDetails.bankName.withIndex()) {
+                            formattedBanks.append("${index + 1}. $banks\n")
+                        }
+                        showText()
+                        tv_user_details.text = formattedBanks
+                        clearText()
+                    } else {
+                        showToast(invalidTransferAmount2)
+                        return@setOnClickListener
                     }
-                    showText()
-                    tv_user_details.text = formattedBanks
-                    clearText()
                 }
                 allQuestions[4] -> {
                     val formattedBanks: StringBuilder = java.lang.StringBuilder()
@@ -105,20 +118,18 @@ class MainActivity : AppCompatActivity() {
                     showText()
                     tv_user_details.text = formattedBanks
                     if (editText.toInt() > currentUser!!.bankDetails.bankName.size) {
-                        tv_question.text = invalidInput
+                        showToast(invalidInput)
                         clearText()
+                        return@setOnClickListener
                     } else {
                         currentUserBankIndex = editText.toInt()
                         tv_question.text = allQuestions[5]
                         clearText()
-                        CoroutineScope(IO).launch {
-                            threeSecondsDelay()
-                        }
                     }
                 }
                 allQuestions[5] -> {
                     if (editText.toInt() > receivingUser.bankDetails.bankName.size) {
-                        tv_question.text = invalidInput
+                        showToast(invalidInput)
                         clearText()
                     } else {
                         showText()
@@ -135,27 +146,42 @@ class MainActivity : AppCompatActivity() {
                         showText()
                         tv_question.text = allQuestions[7]
                         val message =
-                            "You have successfully transferred $transferAmount to ${receivingUser.name}"
+                            "You have successfully transferred $transferAmount to ${receivingUser.name}\n1. Perform another transaction\n2. Exit"
                         tv_user_details.text = message
                         clearText()
                     } else {
-                        tv_question.text = invalidOTPErrorMessage
+                        showToast(invalidOTPErrorMessage)
                         clearText()
                         hideText()
+                        return@setOnClickListener
                     }
                 }
                 allQuestions[7] -> {
-                    //tv_question.text = allQuestions[8]
+                    if (editText.toInt() == 1) {
+                        // Perform another transaction
+                        tv_question.text = allQuestions[0]
+                    } else if (editText.toInt() == 2) {
+                        // Exit app
+                        exitProcess(0)
+                    } else {
+                        showToast(invalidInput)
+                        return@setOnClickListener
+                    }
                 }
                 allQuestions[8] -> {
-
                     recipientBankIndex = editText.toInt()
                     tv_question.text =
                         currentUser!!.bankDetails.bankBalance[recipientBankIndex - 1].toString()
+                    val message = "1. Perform another transaction\n2. Exit"
+                    tv_user_details.text = message
+                    if (editText.toInt() == 1) {
+                        // Perform another transaction
+                        tv_question.text = allQuestions[0]
+                    } else if (editText.toInt() == 2) {
+                        // Exit app
+                        exitProcess(0)
+                    }
                 }
-                /*allQuestions[9] -> {
-                    tv_question.text = allQuestions[0]
-                }*/
             }
         }
     }
@@ -185,7 +211,7 @@ class MainActivity : AppCompatActivity() {
         editText.setText("")
     }
 
-    private suspend fun threeSecondsDelay() {
-        kotlinx.coroutines.delay(1000)
+    private fun showToast(message: String) {
+        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
     }
 }
