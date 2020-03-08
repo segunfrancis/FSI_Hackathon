@@ -169,7 +169,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 allQuestions[8] -> {
-                    if (editText.toInt() > recipientBankIndex) {
+                    if (editText.toInt() > currentUser!!.bankDetails.bankBalance[recipientBankIndex]) {
                         showToast(invalidInput)
                         return@setOnClickListener
                     } else {
@@ -178,13 +178,6 @@ class MainActivity : AppCompatActivity() {
                             currentUser!!.bankDetails.bankBalance[recipientBankIndex - 1].toString()
                         val message = "1. Perform another transaction\n2. Exit"
                         tv_user_details.text = message
-                        if (editText.toInt() == 1) {
-                            // Perform another transaction
-                            tv_question.text = allQuestions[0]
-                        } else if (editText.toInt() == 2) {
-                            // Exit app
-                            exitProcess(0)
-                        }
                     }
                 }
             }
